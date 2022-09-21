@@ -1,6 +1,5 @@
 ﻿using AspNetBlazor_RssFeeder.Services.Interfaces;
 using AspNetBlazor_RssFeeder.Types;
-using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 
@@ -8,6 +7,8 @@ namespace AspNetBlazor_RssFeeder.Services;
 
 public class SettingsService : ISettingsService
 {
+    #region static
+
     private static readonly string _settingsFileName = "settings.xml";
     public static readonly string _settingsSchemaFileName = "SettingsSchema.xsd";
     //public static readonly string _settingsSchemaNS = "RssFeeder.SettingsSchema";
@@ -23,10 +24,14 @@ public class SettingsService : ISettingsService
         return new SettingsService();
     }
 
+    #endregion
 
+    #region cache
 
     private XmlSchemaSet _settingsSchemaSet;
     private SettingsData? _cached;
+
+    #endregion
 
     public Stream? SettingsFile { get; set; } = null;
 
@@ -39,7 +44,6 @@ public class SettingsService : ISettingsService
         var settingsSchema = XmlSchema.Read(settingsSchemeReader, null);
         _settingsSchemaSet.Add(settingsSchema!);
     }
-
 
     public async Task<Result<SettingsData>> Get()
     {
@@ -116,6 +120,8 @@ public class SettingsService : ISettingsService
     }
 
 
+    #region private methods
+
     private bool IsStreamValide() =>
         !(SettingsFile == null || !SettingsFile.CanSeek || !SettingsFile.CanWrite || !SettingsFile.CanRead);
 
@@ -155,4 +161,6 @@ public class SettingsService : ISettingsService
         stream.Position = 0;
         stream.SetLength(0);
     }
+
+    #endregion
 }
