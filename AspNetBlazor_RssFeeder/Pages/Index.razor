@@ -1,77 +1,102 @@
 ﻿@page "/"
+
 @using AspNetBlazor_RssFeeder.Services
 @using AspNetBlazor_RssFeeder.Services.Interfaces
+@using AspNetBlazor_RssFeeder.Types;
 
 @inject ISettingsService settings
+@inject IFeeder feeder
+
 
 <PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
 
-<p>Welcome to your new app.</p>
-
-@if (settingsData != null)
+@if (_settingsData != null)
 {
-    <strong>Settings Data:</strong>
+    <div class="card p-2">
+        <strong>Settings Data:</strong>
 
-    <ul>
-        <li>update: @settingsData.UpdateFrequency</li>
-        <li>render: @settingsData.StyleDescription</li>
-        <li>
-            feeds:
-            <ul>
-                @foreach(FeedSettingsData feed in settingsData.FeedsSettings)
-                {
-                    <li>is active: @feed.IsActive ; url: @feed.URL</li>
-                }
-            </ul>
-        </li>
-    </ul>
+        <ul>
+            <li>update: @_settingsData.UpdateFrequency</li>
+            <li>render: @_settingsData.StyleDescription</li>
+            <li>
+                feeds:
+                <ul>
+                    @foreach(FeedSettingsData feed in _settingsData.FeedsSettings)
+                    {
+                        <li>is active: @feed.IsActive ; url: @feed.URL</li>
+                    }
+                </ul>
+            </li>
+        </ul>
+    </div>
 }
+
+@if (_feededItems != null)
+{
+    <div class="card px-3 pt-3 mx-auto" style="max-width: 40rem">
+        @foreach (var items in _feededItems)
+        {
+            <FeedItem Data=@items></FeedItem>
+        }
+    </div>
+}
+
+
+
 
 
 @code 
 {
-    private SettingsData? settingsData;
+    private SettingsData? _settingsData;
+    private List<FeedItemData>? _feededItems;
 
     protected override async Task OnInitializedAsync()
     {
-        var setResult1 = await settings.Set(GetSettingsData());
-        var setResult2 = await settings.Set(GetSettingsData());
-        var result = await settings.Get();
-
-        settingsData = result.GetValueOrThrow();
-    }
-
-    private SettingsData GetSettingsData()
-    {
-        return new SettingsData
+        if (_settingsData == null)
         {
-            FeedsSettings = new[]
-            {
-                new FeedSettingsData { IsActive = true, URL = "https://habr.com/ru/rss/interesting/" },
-                new FeedSettingsData { IsActive = false, URL = "https://dtf.ru/rss"}
-            },
-            UpdateFrequency = 100f,
-            StyleDescription = false
-        };
+            // receive settings
+            var issueSettings = await settings.Get();
+            _settingsData = issueSettings.Value;
+
+            // feed news
+            feeder.Settings = _settingsData;
+            var issueNews = await feeder.FeedNews();
+            _feededItems = issueNews.Value?.ToList();
+        }
     }
 
-    private string GetSettingsText()
-    {
-        return "" +
-            "<?xml version=\"1.0\" encoding=\"utf-8\" ?>" +
-            "<settings>" +
-            "   <feeds>" +
-            "       <feed is_active=\"true\">" +
-            "           <url>https://habr.com/ru/rss/interesting/</url>" +
-            "       </feed>" +
-            "       <feed is_active=\"false\">" +
-            "           <url>https://dtf.ru/rss</url>" +
-            "       </feed>" +
-            "   </feeds>" +
-            "   <update_frequency>100.0</update_frequency>" +
-            "   <style_description>false</style_description>" +
-            "</settings>";
-    }
+
+
+    //private SettingsData GetSettingsData()
+    //{
+    //    return new SettingsData
+    //    {
+    //        FeedsSettings = new[]
+    //        {
+    //            new FeedSettingsData { IsActive = true, URL = "https:habr.com/ru/rss/interesting/" },
+    //            new FeedSettingsData { IsActive = false, URL = "https:dtf.ru/rss"}
+    //        },
+    //        UpdateFrequency = 100f,
+    //        StyleDescription = false
+    //    };
+    //}
+
+    //private string GetSettingsText()
+    //{
+    //    return "" +
+    //        "<?xml version=\"1.0\" encoding=\"utf-8\" ?>" +
+    //        "<settings>" +
+    //        "   <feeds>" +
+    //        "       <feed is_active=\"true\">" +
+    //        "           <url>https:habr.com/ru/rss/interesting/</url>" +
+    //        "       </feed>" +
+    //        "       <feed is_active=\"false\">" +
+    //        "           <url>https:dtf.ru/rss</url>" +
+    //        "       </feed>" +
+    //        "   </feeds>" +
+    //        "   <update_frequency>100.0</update_frequency>" +
+    //        "   <style_description>false</style_description>" +
+    //        "</settings>";
+    //}
 }

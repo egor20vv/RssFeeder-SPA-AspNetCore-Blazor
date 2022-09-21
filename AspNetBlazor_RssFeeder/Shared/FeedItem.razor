@@ -1,0 +1,37 @@
+﻿@using AspNetBlazor_RssFeeder.Types
+@using System.Globalization
+
+<div class="alert alert-secondary mt-4">
+
+    <strong>@(Data.Title)</strong>
+
+    <p>From: @Data.ResourceName</p>
+
+    <p>@Data.PubDate.ToString("ddd, d MMM, HH:mm", CultureInfo.GetCultureInfo("ru-RU"))</p>
+
+    <button class="btn btn-primary" @onclick="@(e => collapsed = !collapsed)">
+        Show more
+    </button>
+    
+    <button class="btn btn-outline-primary">
+        <NavLink href="@Data.PostUrl" target="_blank">To Source</NavLink>
+    </button>
+
+    @if (!collapsed)
+    {
+        <div class="mt-2"  id="collapseDescription">
+            <div class="card card-body">
+                <p class="mw-100 px-1">@((MarkupString)(Data.Description))</p> 
+            </div>
+        </div>
+    }
+
+</div>
+
+
+@code {
+    [Parameter]
+    public FeedItemData Data { get; set; }
+
+    private bool collapsed = true;
+}
