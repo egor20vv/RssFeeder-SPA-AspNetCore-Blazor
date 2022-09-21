@@ -1,7 +1,77 @@
 ﻿@page "/"
+@using AspNetBlazor_RssFeeder.Services
+@using AspNetBlazor_RssFeeder.Services.Interfaces
+
+@inject ISettingsService settings
 
 <PageTitle>Index</PageTitle>
 
 <h1>Hello, world!</h1>
 
-Welcome to your new app.
+<p>Welcome to your new app.</p>
+
+@if (settingsData != null)
+{
+    <strong>Settings Data:</strong>
+
+    <ul>
+        <li>update: @settingsData.UpdateFrequency</li>
+        <li>render: @settingsData.StyleDescription</li>
+        <li>
+            feeds:
+            <ul>
+                @foreach(FeedSettingsData feed in settingsData.FeedsSettings)
+                {
+                    <li>is active: @feed.IsActive ; url: @feed.URL</li>
+                }
+            </ul>
+        </li>
+    </ul>
+}
+
+
+@code 
+{
+    private SettingsData? settingsData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var setResult1 = await settings.Set(GetSettingsData());
+        var setResult2 = await settings.Set(GetSettingsData());
+        var result = await settings.Get();
+
+        settingsData = result.GetValueOrThrow();
+    }
+
+    private SettingsData GetSettingsData()
+    {
+        return new SettingsData
+        {
+            FeedsSettings = new[]
+            {
+                new FeedSettingsData { IsActive = true, URL = "https://habr.com/ru/rss/interesting/" },
+                new FeedSettingsData { IsActive = false, URL = "https://dtf.ru/rss"}
+            },
+            UpdateFrequency = 100f,
+            StyleDescription = false
+        };
+    }
+
+    private string GetSettingsText()
+    {
+        return "" +
+            "<?xml version=\"1.0\" encoding=\"utf-8\" ?>" +
+            "<settings>" +
+            "   <feeds>" +
+            "       <feed is_active=\"true\">" +
+            "           <url>https://habr.com/ru/rss/interesting/</url>" +
+            "       </feed>" +
+            "       <feed is_active=\"false\">" +
+            "           <url>https://dtf.ru/rss</url>" +
+            "       </feed>" +
+            "   </feeds>" +
+            "   <update_frequency>100.0</update_frequency>" +
+            "   <style_description>false</style_description>" +
+            "</settings>";
+    }
+}

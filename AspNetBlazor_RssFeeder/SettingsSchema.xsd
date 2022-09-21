@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="unqualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="settings" nillable="false">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="feeds" nillable="false">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element maxOccurs="unbounded" name="feed" nillable="false">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="url" type="xs:string" nillable="false"></xs:element>
+									</xs:sequence>
+									<xs:attribute name="is_active" type="xs:boolean" use="required"></xs:attribute>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="update_frequency" type="xs:float" nillable="false"></xs:element>
+				<xs:element name="style_description" type="xs:boolean" nillable="false"></xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
