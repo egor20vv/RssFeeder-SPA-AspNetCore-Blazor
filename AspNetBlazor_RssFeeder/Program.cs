@@ -1,7 +1,14 @@
+using AspNetBlazor_RssFeeder.Services;
+using AspNetBlazor_RssFeeder.Services.Interfaces;
+
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// settings service
+builder.Services.AddSingleton<ISettingsService, SettingsService>(_ => SettingsService.CreateWithFile());
+
 
 // Add services to the container.
 builder.Services.AddRazorPages();
