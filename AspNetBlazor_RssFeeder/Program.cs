@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 // settings service
 builder.Services.AddSingleton<ISettingsService, SettingsService>(_ => SettingsService.CreateWithFile());
 builder.Services.AddSingleton<IFeeder, Feeder>();
+builder.Services.AddTransient<AutoUpdater>();
 
 
 // Add services to the container.
