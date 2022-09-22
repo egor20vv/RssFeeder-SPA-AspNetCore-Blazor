@@ -1,0 +1,118 @@
+﻿@page "/settings"
+
+@using AspNetBlazor_RssFeeder.Services
+@using AspNetBlazor_RssFeeder.Services.Interfaces
+@using AspNetBlazor_RssFeeder.Types;
+
+@inject ISettingsService settings
+
+<PageTitle>Settings</PageTitle>
+
+<div class="card px-3 pt-3 mx-auto" style="max-width: 40rem">
+
+    @if (_settingsData != null)
+    {
+    
+        <strong>Feed Resources</strong>
+        <div class="card p-2 my-1">
+            @foreach (var element in _settingsData.FeedsSettings.Select((e, i) => new { Effect = e, Index = i}))
+            {
+                <div class="d-flex my-1">
+                    <input for="@($"url{element.Index}")" 
+                            type="checkbox" @bind="element.Effect.IsActive"
+                            />
+                    <input id="@($"url{element.Index}")" for="@($"rem_url{element.Index}")"
+                            class="w-100 mx-2"
+                            @bind="element.Effect.URL"
+                             />
+                    <button id="@($"rem_url{element.Index}")" class="btn btn-danger"
+                            @onclick="@(() => DeleteUrl(element.Index))"> 
+                        Delete
+                    </button>
+                </div>
+        
+            }
+            <button @onclick="@(() => AddUrl())" class="w-25 mx-auto btn btn-success">Add</button>
+        </div>
+
+        <strong>Addition settings</strong>
+        <div class="card d-grid p-2 my-1">
+            <div class="m-2 w-50">
+                <div>Update Frequency</div>
+                <input type="number" @bind="_settingsData.UpdateFrequency"/>
+            </div>
+        
+            <div class="m-2 w-50">
+                <div>Style Description</div>
+                <input type="checkbox" @bind="_settingsData.StyleDescription">
+            </div>
+        </div>
+    
+        <button class="m-4 btn btn-outline-success" @onclick="SaveAll">Save</button>
+
+        <div class="mx-auto">
+            <Popup @ref="_popup" />
+        </div>
+    }
+    else 
+    {
+        <p>Loading . . .</p>
+    }
+
+</div>
+
+
+
+@code {
+    private SettingsData? _settingsData;
+    private Popup _popup;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_settingsData == null)
+        {
+            var issueSettingsData = await settings.Get();
+            _settingsData = issueSettingsData.Value;
+        }
+    }
+
+    private void SetUrl(int index, string url)
+    {
+        if (_settingsData != null)
+        {
+            _settingsData.FeedsSettings.ElementAt(index).URL = url;
+        }
+    }
+
+    private void SetIsActive(int index, bool isActive)
+    {
+        if (_settingsData != null)
+        {
+            _settingsData.FeedsSettings.ElementAt(index).IsActive = isActive;
+        }
+    }
+
+    private void DeleteUrl(int urlIndex)
+    {
+        if (_settingsData != null && _settingsData.FeedsSettings.Count() != 1)
+            _settingsData.FeedsSettings.RemoveAt(urlIndex);
+    }
+
+    private void AddUrl()
+    {
+        if (_settingsData != null && !_settingsData.FeedsSettings.Any(u => string.IsNullOrWhiteSpace(u.URL)))
+            _settingsData.FeedsSettings.Add(new FeedSettingsData { IsActive = false, URL = string.Empty });
+    }
+
+    private async Task SaveAll()
+    {
+        if (_settingsData != null)
+        {
+            _settingsData.FeedsSettings = _settingsData.FeedsSettings.Where(f => !string.IsNullOrWhiteSpace(f.URL)).ToList();
+            await settings.Set(_settingsData);
+            _popup.Show("Settings saved");
+        }
+        
+    }
+
+}

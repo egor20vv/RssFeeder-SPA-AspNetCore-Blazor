@@ -17,7 +17,7 @@
 						</xs:sequence>
 					</xs:complexType>
 				</xs:element>
-				<xs:element name="update_frequency" type="xs:float" nillable="false"></xs:element>
+				<xs:element name="update_frequency" type="xs:int" nillable="false"></xs:element>
 				<xs:element name="style_description" type="xs:boolean" nillable="false"></xs:element>
 			</xs:sequence>
 		</xs:complexType>

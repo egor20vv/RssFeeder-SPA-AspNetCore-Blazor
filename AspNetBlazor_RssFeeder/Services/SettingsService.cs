@@ -49,8 +49,8 @@ public class SettingsService : ISettingsService
     {
         // return cached if was changes
         if (_cached != null)
-            return new Result<SettingsData> { Value = _cached };
-            
+            return new Result<SettingsData> { Value = _cached.Clone() as SettingsData };
+
 
         // check is stream valid
         if (!IsStreamValide())
@@ -69,12 +69,12 @@ public class SettingsService : ISettingsService
                 {
                     IsActive = (bool)f.Attribute("is_active")!,
                     URL = f.Element("url")!.Value
-                }),
-            UpdateFrequency = (float)settingsXmlData.Descendants("update_frequency").First(),
+                }).ToList(),
+            UpdateFrequency = (int)settingsXmlData.Descendants("update_frequency").First(),
             StyleDescription = (bool)settingsXmlData.Descendants("style_description").First()
         });
 
-        return new Result<SettingsData> { Value = _cached };
+        return new Result<SettingsData> { Value = _cached.Clone() as SettingsData};
     }
 
     public async Task<Result<bool>> Set(SettingsData settingsData)
@@ -83,7 +83,7 @@ public class SettingsService : ISettingsService
         if (settingsData.Equals(_cached))
             return new Result<bool> { Value = false };
         else
-            _cached = settingsData;
+            _cached = settingsData.Clone() as SettingsData;
 
         // check is stream valid
         if (!IsStreamValide())
@@ -128,9 +128,9 @@ public class SettingsService : ISettingsService
     private SettingsData GetDefaultSettingsData() =>
         new SettingsData
         {
-            FeedsSettings = new[] { new FeedSettingsData { URL = "https://habr.com/ru/rss/interesting/", IsActive = true } },
+            FeedsSettings = new[] { new FeedSettingsData { URL = "https://habr.com/ru/rss/interesting/", IsActive = true } }.ToList(),
             StyleDescription = false,
-            UpdateFrequency = 100f
+            UpdateFrequency = 100
         };
 
     private XDocument? LoadXmlDocument(Stream xml, out Exception? e)

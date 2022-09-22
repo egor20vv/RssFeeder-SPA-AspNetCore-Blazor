@@ -1,10 +1,26 @@
 ﻿namespace AspNetBlazor_RssFeeder.Types;
 
-public class SettingsData
+public class SettingsData : ICloneable
 {
-    public IEnumerable<FeedSettingsData> FeedsSettings { get; set; }
-    public float UpdateFrequency { get; set; }
+    private int _UpdateFrequency;
+
+    public List<FeedSettingsData> FeedsSettings { get; set; }
+    public int UpdateFrequency 
+    { 
+        get => _UpdateFrequency;
+        set => _UpdateFrequency = value >= 10 ? value : 10; 
+    }
     public bool StyleDescription { get; set; }
+
+    public object Clone()
+    {
+        return new SettingsData
+        {
+            FeedsSettings = new(FeedsSettings.Select(f => new FeedSettingsData { IsActive = f.IsActive, URL = f.URL })),
+            StyleDescription = StyleDescription,
+            UpdateFrequency = UpdateFrequency
+        };
+    }
 
     public override bool Equals(object? obj)
     {
