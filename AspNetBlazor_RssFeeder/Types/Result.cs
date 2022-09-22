@@ -4,7 +4,6 @@ public class Result<T>
 {
     public T? Value { get; set; }
     public Exception? Error { get; set; }
-    public Exception? Warning { get; set; }
 
 
     public T GetValueOrThrow()
@@ -13,9 +12,15 @@ public class Result<T>
             return Value;
         else if (Error != null)
             throw Error;
-        else if (Warning != null)
-            throw Warning;
         else
             throw new Exception("Unknown exception was thrown");
+    }
+
+    public async Task<T?> GetValueOrPrintException(TextWriter _out)
+    {
+        if (Error != null)
+            await _out.WriteLineAsync(string.Format("Error: {0}\n{1}", Error.Message, Error.StackTrace));
+
+        return Value;
     }
 }

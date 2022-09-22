@@ -12,19 +12,19 @@
 
 <PageTitle>News</PageTitle>
 
-@if (_feededItems != null)
-{
-    <div class="card px-3 pt-3 mx-auto" style="max-width: 40rem">
-        @foreach (var items in _feededItems)
-        {
-            <FeedItem Data=@items></FeedItem>
-        }
-    </div>
-}
-else
-{
-    <p>Loading . . .</p>
-}
+<div class="card px-3 pt-3 mx-auto" style="max-width: 40rem">
+    @if (_feededItems != null)
+    {
+            @foreach (var items in _feededItems)
+            {
+                <FeedItem Data=@items></FeedItem>
+            }
+    }
+    else
+    {
+        <p>Loading . . .</p>
+    }
+</div>
 
 
 @code 
@@ -37,31 +37,37 @@ else
     {
         // receive settings
         var issueSettings = await settings.Get();
-        _settingsData = issueSettings.Value;
+        _settingsData = await issueSettings.GetValueOrPrintException(Console.Out);
 
         var issueWasUpdated = await feeder.WasUpdated();
-        if (_feededItems == null || issueWasUpdated.Value)
+        var wasUpdated = await issueWasUpdated.GetValueOrPrintException(Console.Out);
+
+        if (_feededItems == null || wasUpdated)
         {
             // feed news
             feeder.Settings = _settingsData;
             var issueNews = await feeder.FeedNews();
-            _feededItems = issueNews.Value?.ToList();
+            _feededItems = (await issueNews.GetValueOrPrintException(Console.Out))?.ToList();
         }
 
         _checkPageUpdated = Path.GetRandomFileName();
-        autoUpdater.SetUpTimer(_settingsData!.UpdateFrequency, async () =>
-        {
-            var issueWasUpdated = await feeder.WasUpdated();
-            if (issueWasUpdated?.Value != null && issueWasUpdated.Value == true)
+        if (_settingsData != null) {
+            await autoUpdater.SetUpTimer(_settingsData!.UpdateFrequency, async () =>
             {
-                Console.WriteLine("Info: Page was updated");
-                var issueNews = await feeder.FeedNews();
-                _feededItems = issueNews.Value?.ToList();
-            }
-            _checkPageUpdated = Path.GetRandomFileName();
+                var issueWasUpdated = await feeder.WasUpdated();
+                var wasUpdated = await issueWasUpdated.GetValueOrPrintException(Console.Out);
 
-            await InvokeAsync(() => StateHasChanged());
-        });
+                if (issueWasUpdated?.Value != null && wasUpdated)
+                {
+                    Console.WriteLine("Info: Page was updated");
+                     var issueNews = await feeder.FeedNews();
+                    _feededItems = (await issueNews.GetValueOrPrintException(Console.Out))?.ToList();
+                }
+                _checkPageUpdated = Path.GetRandomFileName();
+
+                await InvokeAsync(() => StateHasChanged());
+            });
+        }
     }
 
     public void Dispose() => autoUpdater.Dispose();

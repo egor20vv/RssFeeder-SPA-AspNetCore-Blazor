@@ -65,14 +65,14 @@
 
 @code {
     private SettingsData? _settingsData;
-    private Popup _popup;
+    private Popup? _popup;
 
     protected override async Task OnInitializedAsync()
     {
         if (_settingsData == null)
         {
             var issueSettingsData = await settings.Get();
-            _settingsData = issueSettingsData.Value;
+            _settingsData = await issueSettingsData.GetValueOrPrintException(Console.Out);
         }
     }
 
@@ -110,7 +110,7 @@
         {
             _settingsData.FeedsSettings = _settingsData.FeedsSettings.Where(f => !string.IsNullOrWhiteSpace(f.URL)).ToList();
             await settings.Set(_settingsData);
-            _popup.Show("Settings saved");
+            _popup?.Show("Settings saved");
         }
         
     }

@@ -6,12 +6,15 @@ public class AutoUpdater : IDisposable
 
     public AutoUpdater() { }
 
-    public void SetUpTimer(float intervalSeconds, Func<Task> updateAction)
+    public async Task SetUpTimer(float intervalSeconds, Func<Task> updateAction)
     {
-        _timer = new Timer(async (s) =>
+        await Task.Run(() =>
         {
-            await updateAction.Invoke();
-        }, null, (int)(1000 * intervalSeconds), (int)(1000 * intervalSeconds));
+            _timer = new Timer(async (s) =>
+            {
+                await updateAction.Invoke();
+            }, null, (int)(1000 * intervalSeconds), (int)(1000 * intervalSeconds));
+        });
     }
 
     public void Dispose()

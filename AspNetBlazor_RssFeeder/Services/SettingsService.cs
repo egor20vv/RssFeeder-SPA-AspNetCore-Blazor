@@ -49,12 +49,15 @@ public class SettingsService : ISettingsService
     {
         // return cached if was changes
         if (_cached != null)
+        {
+            Console.WriteLine("Info: settings was given from cache");
             return new Result<SettingsData> { Value = _cached.Clone() as SettingsData };
-
+        }
 
         // check is stream valid
         if (!IsStreamValide())
             return new Result<SettingsData> { Error = new IOException("SettingsFile stream is not valid") };
+
 
         // read and validate xml from stream
         var settingsXmlData = LoadXmlDocument(SettingsFile!, out Exception? validationError);
