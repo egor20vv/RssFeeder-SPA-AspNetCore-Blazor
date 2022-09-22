@@ -4,33 +4,13 @@
 @using AspNetBlazor_RssFeeder.Services.Interfaces
 @using AspNetBlazor_RssFeeder.Types;
 
+@implements IDisposable
+
 @inject ISettingsService settings
 @inject IFeeder feeder
+@inject AutoUpdater autoUpdater
 
-
-<PageTitle>Index</PageTitle>
-
-
-@if (_settingsData != null)
-{
-    <div class="card p-2">
-        <strong>Settings Data:</strong>
-
-        <ul>
-            <li>update: @_settingsData.UpdateFrequency</li>
-            <li>render: @_settingsData.StyleDescription</li>
-            <li>
-                feeds:
-                <ul>
-                    @foreach(FeedSettingsData feed in _settingsData.FeedsSettings)
-                    {
-                        <li>is active: @feed.IsActive ; url: @feed.URL</li>
-                    }
-                </ul>
-            </li>
-        </ul>
-    </div>
-}
+<PageTitle>News</PageTitle>
 
 @if (_feededItems != null)
 {
@@ -41,62 +21,48 @@
         }
     </div>
 }
-
-
-
+else
+{
+    <p>Loading . . .</p>
+}
 
 
 @code 
 {
     private SettingsData? _settingsData;
     private List<FeedItemData>? _feededItems;
+    private string? _checkPageUpdated;
 
     protected override async Task OnInitializedAsync()
     {
-        if (_settingsData == null)
-        {
-            // receive settings
-            var issueSettings = await settings.Get();
-            _settingsData = issueSettings.Value;
+        // receive settings
+        var issueSettings = await settings.Get();
+        _settingsData = issueSettings.Value;
 
+        var issueWasUpdated = await feeder.WasUpdated();
+        if (_feededItems == null || issueWasUpdated.Value)
+        {
             // feed news
             feeder.Settings = _settingsData;
             var issueNews = await feeder.FeedNews();
             _feededItems = issueNews.Value?.ToList();
         }
+
+        _checkPageUpdated = Path.GetRandomFileName();
+        autoUpdater.SetUpTimer(_settingsData!.UpdateFrequency, async () =>
+        {
+            var issueWasUpdated = await feeder.WasUpdated();
+            if (issueWasUpdated?.Value != null && issueWasUpdated.Value == true)
+            {
+                Console.WriteLine("Info: Page was updated");
+                var issueNews = await feeder.FeedNews();
+                _feededItems = issueNews.Value?.ToList();
+            }
+            _checkPageUpdated = Path.GetRandomFileName();
+
+            await InvokeAsync(() => StateHasChanged());
+        });
     }
 
-
-
-    //private SettingsData GetSettingsData()
-    //{
-    //    return new SettingsData
-    //    {
-    //        FeedsSettings = new[]
-    //        {
-    //            new FeedSettingsData { IsActive = true, URL = "https:habr.com/ru/rss/interesting/" },
-    //            new FeedSettingsData { IsActive = false, URL = "https:dtf.ru/rss"}
-    //        },
-    //        UpdateFrequency = 100f,
-    //        StyleDescription = false
-    //    };
-    //}
-
-    //private string GetSettingsText()
-    //{
-    //    return "" +
-    //        "<?xml version=\"1.0\" encoding=\"utf-8\" ?>" +
-    //        "<settings>" +
-    //        "   <feeds>" +
-    //        "       <feed is_active=\"true\">" +
-    //        "           <url>https:habr.com/ru/rss/interesting/</url>" +
-    //        "       </feed>" +
-    //        "       <feed is_active=\"false\">" +
-    //        "           <url>https:dtf.ru/rss</url>" +
-    //        "       </feed>" +
-    //        "   </feeds>" +
-    //        "   <update_frequency>100.0</update_frequency>" +
-    //        "   <style_description>false</style_description>" +
-    //        "</settings>";
-    //}
+    public void Dispose() => autoUpdater.Dispose();
 }
